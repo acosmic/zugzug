@@ -1,5 +1,5 @@
+#! /usr/bin/python3.8
 import discord
-
 from settings import *
 # from wow import *
 from datetime import datetime
