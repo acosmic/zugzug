@@ -7,8 +7,27 @@ from datetime import datetime
 # LOG IN
 @bot.event
 async def on_ready():
-	await bot.change_presence(status=discord.Status.online, activity=discord.Game('.pvp<Char><Server>'))
-	print(f'{bot.user} has connected to Cold Dark Matter!')
+	await bot.change_presence(status=discord.Status.online, activity=discord.Game('.help'))
+	print(f'{bot.user} has connected to Discord!')
+
+@bot.command(pass_context=True, aliases=[])
+async def help(ctx,):
+	help_embed = discord.Embed(
+				colour= discord.Colour(0xffe100),
+				title= '.pvp <character name> <server>',
+				description= 'Servers with apostrophes, Ex. Mug\'Thol --> mugthol.\n\n'
+							 'Servers with multiple names, Ex. Bleeding Hollow --> bleeding-hollow.\n\n'
+							 'Examples:\n '
+							 '.pvp boysnight illidan\n'
+							 '.pvp goreckj mugthol\n'
+							 '.pvp wizk bleeding-hollow\n\n'
+				)
+
+	help_embed.set_author(name='ZUGZUG - Help')
+	help_embed.add_field(name='\u200b', value='Currently only supporting the US region.\n', inline=False)
+	help_embed.add_field(name='For issues, go to:',value='[https://github.com/acosmic/zugzug/issues](https://github.com/acosmic/zugzug/issues)')
+	await ctx.send(embed=help_embed)
+
 
 wowApiChar = 'https://us.api.blizzard.com/profile/wow/character/'
 
@@ -185,4 +204,4 @@ async def zugzug(ctx):
 
 
 if __name__ == '__main__':
-	bot.run(ZUGZUG)
+	bot.run(ZUGTEST)
