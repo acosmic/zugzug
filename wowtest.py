@@ -6,8 +6,8 @@ from datetime import datetime
 # acosmicCharId = 201745243
 # slycatxCharId = 202594517
 
-charName = 'boysnight'
-charServer = 'illidan'
+charName = 'rushyret'
+charServer = 'thrall'
 wowApiChar = 'https://us.api.blizzard.com/profile/wow/character/'
 
 def create_access_token(client_id, client_secret, region = 'us'):
@@ -57,21 +57,33 @@ rating_in_dict = 'rating' in pvp10v10
 charimg = rrender.json()
 charStats = rstats.json()
 
-xplist = aStats['categories'][7]['sub_categories'][0]['statistics']
-xplist = [d['name'] for d in xplist if 'name' in d]
-index3v3 = xplist.index('Highest 3v3 personal rating')
-index2v2 = xplist.index('Highest 2v2 personal rating')
-xp3v3 = int(aStats['categories'][7]['sub_categories'][0]['statistics'][index3v3]['quantity'])
-xp2v2 = int(aStats['categories'][7]['sub_categories'][0]['statistics'][index2v2]['quantity'])
+categories = aStats['categories']
+categoryNames = [d['name'] for d in categories if 'name' in d]
+indexpvp = categoryNames.index('Player vs. Player')
+
+subcategories = categories[indexpvp]['sub_categories']
+subcategoryNames = [d['name'] for d in subcategories if 'name' in d]
+indexrated = subcategoryNames.index('Rated Arenas')
+
+ratedarena = subcategories[indexrated]['statistics']
+ratedarenaNames = [d['name'] for d in ratedarena if 'name' in d]
+index3v3 = ratedarenaNames.index('Highest 3v3 personal rating')
+index2v2 = ratedarenaNames.index('Highest 2v2 personal rating')
+
+xp3v3 = int(ratedarena[index3v3]['quantity'])
+xp2v2 = int(ratedarena[index2v2]['quantity'])
+
+if __name__ == '__main__':
 
 
-print(index3v3)
+    print(xp3v3)
 
-print(xp3v3)
-print(index2v2)
+    print(xp2v2)
 
-print(xp2v2)
-# print(charprofile['active_title']['display_string'])
+
+
+    # print(aStats)
+
 
 
 # print(rating_in_dict)

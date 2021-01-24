@@ -1,18 +1,46 @@
 #! /usr/bin/python3
 import discord
 from settings import *
+import psycopg2
 # from wow import *
 from datetime import datetime
 
 # LOG IN
 @bot.event
 async def on_ready():
-	await bot.change_presence(status=discord.Status.online, activity=discord.Game('.pvp<Char><Server>'))
-	print(f'{bot.user} has connected to Cold Dark Matter!')
+	await bot.change_presence(status=discord.Status.online, activity=discord.Game('.help'))
+	print(f'{bot.user} has connected to Discord!')
 
-wowApiChar = 'https://us.api.blizzard.com/profile/wow/character/'
+# HELP COMMAND
+@bot.command(pass_context=True, aliases=[])
+async def help(ctx):
+	help_embed = discord.Embed(
+				colour= discord.Colour(0xffe100),
+				title= '.pvp <character name> <server>',
+				description= 'Servers with apostrophes, Ex. Mug\'Thol --> mugthol.\n\n'
+							 'Servers with multiple names, Ex. Bleeding Hollow --> bleeding-hollow.\n\n'
+							 'Examples:\n '
+							 '.pvp boysnight illidan\n'
+							 '.pvp goreckj mugthol\n'
+							 '.pvp wizk bleeding-hollow\n\n'
+				)
+	help_embed.set_author(name='ZUGZUG - Help')
+	help_embed.add_field(name='\u200b', value='Currently only supporting the US region.\n', inline=False)
+	help_embed.add_field(name='For issues, go to:',value='[https://github.com/acosmic/zugzug/issues](https://github.com/acosmic/zugzug/issues)')
+	await ctx.send(embed=help_embed)
+
+# CREATE PROFILE
+@bot.command(pass_context=True)
+async def createprofile(ctx):
+	await ctx.send('Please enter your character\'s name and the server name:')
+
+# SET MAIN
+
+# SET ALT
 
 
+
+# CHARACTER LOOK UP
 @bot.command(pass_context=True, aliases=[])
 async def pvp(ctx, charName, charServer):
 
@@ -29,7 +57,7 @@ async def pvp(ctx, charName, charServer):
 	def create_checkpvp_link(charName, charServer):
 		checkpvp = 'https://check-pvp.fr/us/'str()+
 	"""
-
+	wowApiChar = 'https://us.api.blizzard.com/profile/wow/character/'
 	response = create_access_token(wowClientId, wowClientSecret)
 	access_token = response['access_token']
 
@@ -47,12 +75,21 @@ async def pvp(ctx, charName, charServer):
 	rachStats = requests.get(achStats)
 	aStats = rachStats.json()
 
-	xplist = aStats['categories'][7]['sub_categories'][0]['statistics']
-	xplist = [d['name'] for d in xplist if 'name' in d]
-	index3v3 = xplist.index('Highest 3v3 personal rating')
-	index2v2 = xplist.index('Highest 2v2 personal rating')
-	xp3v3 = int(aStats['categories'][7]['sub_categories'][0]['statistics'][index3v3]['quantity'])
-	xp2v2 = int(aStats['categories'][7]['sub_categories'][0]['statistics'][index2v2]['quantity'])
+	categories = aStats['categories']
+	categoryNames = [d['name'] for d in categories if 'name' in d]
+	indexpvp = categoryNames.index('Player vs. Player')
+
+	subcategories = categories[indexpvp]['sub_categories']
+	subcategoryNames = [d['name'] for d in subcategories if 'name' in d]
+	indexrated = subcategoryNames.index('Rated Arenas')
+
+	ratedarena = subcategories[indexrated]['statistics']
+	ratedarenaNames = [d['name'] for d in ratedarena if 'name' in d]
+	index3v3 = ratedarenaNames.index('Highest 3v3 personal rating')
+	index2v2 = ratedarenaNames.index('Highest 2v2 personal rating')
+
+	xp3v3 = int(ratedarena[index3v3]['quantity'])
+	xp2v2 = int(ratedarena[index2v2]['quantity'])
 
 
 	r2v2 = requests.get(url2v2)
@@ -122,8 +159,9 @@ async def pvp(ctx, charName, charServer):
 	covenant = '\n'+str(charprofile['covenant_progress']['chosen_covenant']['name'])
 	renown = ' '+str(charprofile['covenant_progress']['renown_level'])
 
+	teststr = 'xpPvP'
 	r_embed = discord.Embed(
-				colour= discord.Colour(0x190125),
+				colour= discord.Colour(0xffe100),
 				title=
 				'Current - 2v2: '+rating2v2+'       3v3: '+rating3v3+'       RBG: '+ratingrbg+'\n'+
 				'Highest - 2v2: '+str(xp2v2)+'       3v3: '+str(xp3v3)
