@@ -223,4 +223,4 @@ async def zugzug(ctx):
 
 
 if __name__ == '__main__':
-	bot.run(ZUGTEST)
+	bot.run(ZUGZUG)
