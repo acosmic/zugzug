@@ -1,7 +1,7 @@
+#! /usr/bin/python3
 import os
 from dotenv import load_dotenv
-import requests
-from discord.ext import commands
+
 
 
 

@@ -1,15 +1,16 @@
 #! /usr/bin/python3
 import discord
+from discord.ext import commands
+import requests
 from settings import *
 from datetime import datetime
-from discord.ext import commands
+from wowaccess import create_access_token
 # from wow import *
-
-
 
 BOT_PREFIX = '.'
 bot = commands.Bot(command_prefix = BOT_PREFIX)
 bot.remove_command('help')
+
 
 # LOG IN
 @bot.event
@@ -19,16 +20,9 @@ async def on_ready():
 		print(guild.id)
 	print(f'{bot.user} has connected to Discord!')
 
-@bot.event
+@bot.event #check for commands in each message
 async def on_message(message):
-	if "CLINTTEST" in message.content:
-		await message.channel.send('testing')
 	await bot.process_commands(message)
-
-
-@bot.command(pass_context=True)
-async def test():
-	print('testing')
 
 
 # HELP COMMAND
@@ -39,8 +33,8 @@ async def zughelp(ctx):
 				title= '.pvp <character name> <server>',
 				description= 'Servers with apostrophes, Ex. Mug\'Thol --> mugthol.\n\n'
 							 'Servers with multiple names, Ex. Bleeding Hollow --> bleeding-hollow.\n\n'
-							 'Examples:\n '
-							 '.pvp boysnight illidan\n'
+							 'Examples:\n'
+							 '.pvp acosmic illidan\n'
 							 '.pvp goreckj mugthol\n'
 							 '.pvp wizk bleeding-hollow\n\n'
 				)
@@ -63,165 +57,154 @@ async def createprofile(ctx):
 
 # CHARACTER LOOK UP
 @bot.command(pass_context=True, aliases=[])
-async def pvp(ctx, charName, charServer):
-
-	def create_access_token(client_id, client_secret, region = 'us'):
-		data = { 'grant_type': 'client_credentials' }
-		response = requests.post('https://%s.battle.net/oauth/token' % region, data=data, auth=(client_id, client_secret))
-		return response.json()
-
-	"""
-	check-pvp.fr     fix this shit
-	need  format the link and change servers to normal format (malganis -> Mal'Ganis) (khaz-modan -> Khaz%20Modan)
+async def pvp(ctx, character_name, character_server):
 	
+	API_CHARACTER_URL = 'https://us.api.blizzard.com/profile/wow/character/'+str(character_server).lower()+'/'+str(character_name).lower()
+	ACCESS_TOKEN = create_access_token(wowClientId, wowClientSecret)
 
-	def create_checkpvp_link(charName, charServer):
-		checkpvp = 'https://check-pvp.fr/us/'str()+
-	"""
-	wowApiChar = 'https://us.api.blizzard.com/profile/wow/character/'
-	response = create_access_token(wowClientId, wowClientSecret)
-	access_token = response['access_token']
+	achievement_stats = str(API_CHARACTER_URL)+'/achievements/statistics?namespace=profile-us&locale=en_US&access_token='+str(ACCESS_TOKEN)
 
-	achStats = str(wowApiChar) + str(charServer).lower() + '/' + str(
-		charName).lower() + '/achievements/statistics?namespace=profile-us&locale=en_US&access_token=' + str(
-		access_token)
+	url_2v2 = str(API_CHARACTER_URL)+'/pvp-bracket/2v2?namespace=profile-us&locale=en_US&access_token='+str(ACCESS_TOKEN)
+	url_3v3 = str(API_CHARACTER_URL)+'/pvp-bracket/3v3?namespace=profile-us&locale=en_US&access_token='+str(ACCESS_TOKEN)
+	url_rbg = str(API_CHARACTER_URL)+'/pvp-bracket/rbg?namespace=profile-us&locale=en_US&access_token='+str(ACCESS_TOKEN)
+	url_character_image = str(API_CHARACTER_URL)+'/character-media?namespace=profile-us&locale=en_US&access_token='+str(ACCESS_TOKEN)
+	character_armory = 'https://worldofwarcraft.com/en-us/character/us/'
+	url_character_profile = str(API_CHARACTER_URL)+'?namespace=profile-us&locale=en_US&access_token='+str(ACCESS_TOKEN)
 
-	url2v2 = str(wowApiChar)+str(charServer).lower()+'/'+str(charName).lower()+'/pvp-bracket/2v2?namespace=profile-us&locale=en_US&access_token='+str(access_token)
-	url3v3 = str(wowApiChar)+str(charServer).lower()+'/'+str(charName).lower()+'/pvp-bracket/3v3?namespace=profile-us&locale=en_US&access_token='+str(access_token)
-	url10v10 = str(wowApiChar)+str(charServer).lower()+'/'+str(charName).lower()+'/pvp-bracket/rbg?namespace=profile-us&locale=en_US&access_token='+str(access_token)
-	urlrender = str(wowApiChar)+str(charServer).lower()+'/'+str(charName).lower()+'/character-media?namespace=profile-us&locale=en_US&access_token='+str(access_token)
-	charArmory = 'https://worldofwarcraft.com/en-us/character/us/'+str(charServer).lower()+'/'+str(charName).lower()
-	urlprofile = str(wowApiChar)+str(charServer).lower()+'/'+str(charName).lower()+'?namespace=profile-us&locale=en_US&access_token='+str(access_token)
+	achievement_stats_response = requests.get(achievement_stats)
+	achievement_stats_data = achievement_stats_response.json()
 
-	rachStats = requests.get(achStats)
-	aStats = rachStats.json()
+	categories = achievement_stats_data['categories']
+	category_names = [d['name'] for d in categories if 'name' in d]
+	index_pvp = category_names.index('Player vs. Player')
 
-	categories = aStats['categories']
-	categoryNames = [d['name'] for d in categories if 'name' in d]
-	indexpvp = categoryNames.index('Player vs. Player')
+	subcategories = categories[index_pvp]['sub_categories']
+	subcategory_names = [d['name'] for d in subcategories if 'name' in d]
 
-	subcategories = categories[indexpvp]['sub_categories']
-	subcategoryNames = [d['name'] for d in subcategories if 'name' in d]
-	indexrated = subcategoryNames.index('Rated Arenas')
+	if 'Rated Arenas' in subcategory_names:
+		index_rated = subcategory_names.index('Rated Arenas')
 
-	ratedarena = subcategories[indexrated]['statistics']
-	ratedarenaNames = [d['name'] for d in ratedarena if 'name' in d]
-	index3v3 = ratedarenaNames.index('Highest 3v3 personal rating')
-	index2v2 = ratedarenaNames.index('Highest 2v2 personal rating')
+		rated_arena = subcategories[index_rated]['statistics']
+		rated_arena_names = [d['name'] for d in rated_arena if 'name' in d]
+		index_3v3 = rated_arena_names.index('Highest 3v3 personal rating')
+		index_2v2 = rated_arena_names.index('Highest 2v2 personal rating')
 
-	xp3v3 = int(ratedarena[index3v3]['quantity'])
-	xp2v2 = int(ratedarena[index2v2]['quantity'])
+		xp_3v3 = int(rated_arena[index_3v3]['quantity'])
+		xp_2v2 = int(rated_arena[index_2v2]['quantity'])
+	else:
+		xp_3v3 = 'pve nerd'
+		xp_2v2 = 'pve nerd'
 
 
-	r2v2 = requests.get(url2v2)
-	r3v3 = requests.get(url3v3)
-	r10v10 = requests.get(url10v10)
-	rrender = requests.get(urlrender)
-	charprofile = requests.get(urlprofile).json()
-	wowclass = str(charprofile['character_class']['name'])
-	spec = str(charprofile['active_spec']['name'])
-	charName = charName.title()
+	url_2v2_response = requests.get(url_2v2)
+	url_3v3_response = requests.get(url_3v3)
+	url_rbg_response = requests.get(url_rbg)
+	url_character_image_response = requests.get(url_character_image)
+	url_character_profile = requests.get(url_character_profile).json()
+	character_class_name = str(url_character_profile['character_class']['name'])
+	character_active_spec = str(url_character_profile['active_spec']['name'])
+	character_name = character_name.title()
 	# avgilvl = '\n\n'+'Average Item Level: '+str(charprofile['average_item_level'])
-	equilvl = str(charprofile['equipped_item_level'])
+	equipped_item_level = str(url_character_profile['equipped_item_level'])
 
-	checkguild = 'guild' in charprofile
+	checkguild = 'guild' in url_character_profile
 	if checkguild is True:
-		guild = '\n<'+str(charprofile['guild']['name'])+'>'
+		guild = '\n<'+str(url_character_profile['guild']['name'])+'>'
 	else:
 		guild = ''
 
-	checktitle = 'active_title' in charprofile
+	checktitle = 'active_title' in url_character_profile
 	if checktitle is True:
-		title = str(charprofile['active_title']['display_string'])
-		title = title.replace('{name}', charName)
+		title = str(url_character_profile['active_title']['display_string'])
+		title = title.replace('{name}', character_name)
 	else:
-		title = charName
+		title = character_name
 
-	pvp2v2 = r2v2.json()
-	check2v2 = 'rating' in pvp2v2
+	data_2v2 = url_2v2_response.json()
+	check2v2 = 'rating' in data_2v2
 	if check2v2 is True:
-		rating2v2 = str(pvp2v2['rating'])
-		played2v2 = str(pvp2v2['season_match_statistics']['played'])
-		won2v2 = str(pvp2v2['season_match_statistics']['won'])
-		lost2v2 = str(pvp2v2['season_match_statistics']['lost'])
+		rating_2v2 = str(data_2v2['rating'])
+		games_played_2v2 = str(data_2v2['season_match_statistics']['played'])
+		games_won_2v2 = str(data_2v2['season_match_statistics']['won'])
+		games_lost_2v2 = str(data_2v2['season_match_statistics']['lost'])
 	else:
-		rating2v2 = 'pve nerd'
-		played2v2 = '0'
-		won2v2 = '0'
-		lost2v2 = '0'
+		rating_2v2 = '0'
+		games_played_2v2 = '0'
+		games_won_2v2 = '0'
+		games_lost_2v2 = '0'
 	
-	pvp3v3 = r3v3.json()
-	check3v3 = 'rating' in pvp3v3
+	data_3v3 = url_3v3_response.json()
+	check3v3 = 'rating' in data_3v3
 	if check3v3 is True:
-		rating3v3 = str(pvp3v3['rating'])
-		played3v3 = str(pvp3v3['season_match_statistics']['played'])
-		won3v3 = str(pvp3v3['season_match_statistics']['won'])
-		lost3v3 = str(pvp3v3['season_match_statistics']['lost'])
+		rating_3v3 = str(data_3v3['rating'])
+		games_played_3v3 = str(data_3v3['season_match_statistics']['played'])
+		games_won_3v3 = str(data_3v3['season_match_statistics']['won'])
+		games_lost_3v3 = str(data_3v3['season_match_statistics']['lost'])
 	else:
-		rating3v3 = 'pve nerd'
-		played3v3 = '0'
-		won3v3 = '0'
-		lost3v3 = '0'
+		rating_3v3 = '0'
+		games_played_3v3 = '0'
+		games_won_3v3 = '0'
+		games_lost_3v3 = '0'
 	
-	pvp10v10 = r10v10.json()
-	checkrbg = 'rating' in pvp10v10
+	data_rbg = url_rbg_response.json()
+	checkrbg = 'rating' in data_rbg
 	if checkrbg is True:
-		ratingrbg = str(pvp10v10['rating'])
-		playedrbg = str(pvp10v10['season_match_statistics']['played'])
-		wonrbg = str(pvp10v10['season_match_statistics']['won'])
-		lostrbg = str(pvp10v10['season_match_statistics']['lost'])
+		rating_rbg = str(data_rbg['rating'])
+		games_played_rbg = str(data_rbg['season_match_statistics']['played'])
+		games_won_rbg = str(data_rbg['season_match_statistics']['won'])
+		games_lost_rbg = str(data_rbg['season_match_statistics']['lost'])
 	else:
-		ratingrbg = 'pve nerd'
-		playedrbg = '0'
-		wonrbg = '0'
-		lostrbg = '0'
+		rating_rbg = '0'
+		games_played_rbg = '0'
+		games_won_rbg = '0'
+		games_lost_rbg = '0'
 
-	charimg = rrender.json()
-	covenant = '\n'+str(charprofile['covenant_progress']['chosen_covenant']['name'])
-	renown = ' '+str(charprofile['covenant_progress']['renown_level'])
+	character_image = url_character_image_response.json()
+	covenant = '\n'+str(url_character_profile['covenant_progress']['chosen_covenant']['name'])
+	renown = ' '+str(url_character_profile['covenant_progress']['renown_level'])
 
-	teststr = 'xpPvP'
+	
 	r_embed = discord.Embed(
 				colour= discord.Colour(0xffe100),
 				title=
-				'Current - 2v2: '+rating2v2+'       3v3: '+rating3v3+'       RBG: '+ratingrbg+'\n'+
-				'Highest - 2v2: '+str(xp2v2)+'       3v3: '+str(xp3v3)
+				'Current - 2v2: '+rating_2v2+'       3v3: '+rating_3v3+'       RBG: '+rating_rbg+'\n'+
+				'Highest - 2v2: '+str(xp_2v2)+'       3v3: '+str(xp_3v3)
 		,
-				description= '['+'Armory'+']'+'('+str(charArmory)+')'
+				description= '['+'Armory'+']'+'('+str(character_armory)+')'
 				)
-	r_embed.set_author(name=title+' - '+str(charServer).title()+'   |   '+equilvl+' '+spec+' '+wowclass+covenant+renown+guild)
-	r_embed.set_image(url=charimg['assets'][2]['value'])
+	r_embed.set_author(name=title+' - '+str(character_server).title()+'   |   '+equipped_item_level+' '+character_active_spec+' '+character_class_name+covenant+renown+guild)
+	r_embed.set_image(url=character_image['assets'][2]['value'])
 	# r_embed.set_footer(text='['+'Armory Link'+']'+'('+str(charArmory)+')')
-	if int(played2v2) > 0:
-		wr2v2 = int(won2v2)/int(played2v2)*100
-		wr2v2 = str(round(wr2v2))+'%'
+	if int(games_played_2v2) > 0:
+		win_rate_2v2 = int(games_won_2v2)/int(games_played_2v2)*100
+		win_rate_2v2 = str(round(win_rate_2v2))+'%'
 	else:
-		wr2v2 = ''
+		win_rate_2v2 = ''
 
-	if int(played3v3) > 0:
-		wr3v3 = int(won3v3)/int(played3v3)*100
-		wr3v3 = str(round(wr3v3))+'%'
+	if int(games_played_3v3) > 0:
+		win_rate_3v3 = int(games_won_3v3)/int(games_played_3v3)*100
+		win_rate_3v3 = str(round(win_rate_3v3))+'%'
 	else:
-		wr3v3 = ''
+		win_rate_3v3 = ''
 
-	if int(playedrbg) > 0:
-		wrrbg = int(wonrbg)/int(playedrbg)*100
-		wrrbg = str(round(wrrbg))+'%'
+	if int(games_played_rbg) > 0:
+		win_rate_rbg = int(games_won_rbg)/int(games_played_rbg)*100
+		win_rate_rbg = str(round(win_rate_rbg))+'%'
 	else:
-		wrrbg = ''
+		win_rate_rbg = ''
 
 	# 2v2
-	r_embed.add_field(name='2v2 Played:',value=played2v2 +'  -  '+wr2v2, inline=True)
-	r_embed.add_field(name='Won:',value=won2v2, inline=True)
-	r_embed.add_field(name='Lost:',value=lost2v2, inline=True)
+	r_embed.add_field(name='2v2 Played:',value=games_played_2v2 +'  -  '+win_rate_2v2, inline=True)
+	r_embed.add_field(name='Won:',value=games_won_2v2, inline=True)
+	r_embed.add_field(name='Lost:',value=games_lost_2v2, inline=True)
 	# 3v3
-	r_embed.add_field(name='3v3 Played:',value=played3v3 +'  -  '+wr3v3, inline=True)
-	r_embed.add_field(name='Won:',value=won3v3, inline=True)
-	r_embed.add_field(name='Lost:',value=lost3v3, inline=True)
+	r_embed.add_field(name='3v3 Played:',value=games_played_3v3 +'  -  '+win_rate_3v3, inline=True)
+	r_embed.add_field(name='Won:',value=games_won_3v3, inline=True)
+	r_embed.add_field(name='Lost:',value=games_lost_3v3, inline=True)
 	# RBG
-	r_embed.add_field(name='RBG Played:',value=playedrbg +'  -  '+wrrbg, inline=True)
-	r_embed.add_field(name='Won:',value=wonrbg, inline=True)
-	r_embed.add_field(name='Lost:',value=lostrbg, inline=True)
+	r_embed.add_field(name='RBG Played:',value=games_played_rbg +'  -  '+win_rate_rbg, inline=True)
+	r_embed.add_field(name='Won:',value=games_won_rbg, inline=True)
+	r_embed.add_field(name='Lost:',value=games_lost_rbg, inline=True)
 	
 	await ctx.send(embed=r_embed)
 
