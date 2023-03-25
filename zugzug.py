@@ -1,18 +1,39 @@
 #! /usr/bin/python3
 import discord
 from settings import *
-# from wow import *
 from datetime import datetime
+from discord.ext import commands
+# from wow import *
+
+
+
+BOT_PREFIX = '.'
+bot = commands.Bot(command_prefix = BOT_PREFIX)
+bot.remove_command('help')
 
 # LOG IN
 @bot.event
 async def on_ready():
-	await bot.change_presence(status=discord.Status.online, activity=discord.Game('.help'))
+	await bot.change_presence(status=discord.Status.online, activity=discord.Game('.zughelp'))
+	for guild in bot.guilds:
+		print(guild.id)
 	print(f'{bot.user} has connected to Discord!')
+
+@bot.event
+async def on_message(message):
+	if "CLINTTEST" in message.content:
+		await message.channel.send('testing')
+	await bot.process_commands(message)
+
+
+@bot.command(pass_context=True)
+async def test():
+	print('testing')
+
 
 # HELP COMMAND
 @bot.command(pass_context=True, aliases=[])
-async def help(ctx):
+async def zughelp(ctx):
 	help_embed = discord.Embed(
 				colour= discord.Colour(0xffe100),
 				title= '.pvp <character name> <server>',
@@ -25,7 +46,8 @@ async def help(ctx):
 				)
 	help_embed.set_author(name='ZUGZUG - Help')
 	help_embed.add_field(name='\u200b', value='Currently only supporting the US region.\n', inline=False)
-	help_embed.add_field(name='For issues, go to:',value='[https://github.com/acosmic/zugzug/issues](https://github.com/acosmic/zugzug/issues)')
+	help_embed.add_field(name='For issues, go to:', value='[https://github.com/acosmic/zugzug/issues](https://github.com/acosmic/zugzug/issues)')
+	print("help function")
 	await ctx.send(embed=help_embed)
 
 # CREATE PROFILE
@@ -44,9 +66,9 @@ async def createprofile(ctx):
 async def pvp(ctx, charName, charServer):
 
 	def create_access_token(client_id, client_secret, region = 'us'):
-	    data = { 'grant_type': 'client_credentials' }
-	    response = requests.post('https://%s.battle.net/oauth/token' % region, data=data, auth=(client_id, client_secret))
-	    return response.json()
+		data = { 'grant_type': 'client_credentials' }
+		response = requests.post('https://%s.battle.net/oauth/token' % region, data=data, auth=(client_id, client_secret))
+		return response.json()
 
 	"""
 	check-pvp.fr     fix this shit
@@ -204,19 +226,19 @@ async def pvp(ctx, charName, charServer):
 	await ctx.send(embed=r_embed)
 
 
-# @bot.command(pass_context=True, aliases=['',])
-# async def pve(ctx, charName, charServer):
+# # @bot.command(pass_context=True, aliases=['',])
+# # async def pve(ctx, charName, charServer):
 
-# 	def create_access_token(client_id, client_secret, region = 'us'):
-# 	    data = { 'grant_type': 'client_credentials' }
-# 	    response = requests.post('https://%s.battle.net/oauth/token' % region, data=data, auth=(client_id, client_secret))
-# 	    return response.json()
+# # 	def create_access_token(client_id, client_secret, region = 'us'):
+# # 	    data = { 'grant_type': 'client_credentials' }
+# # 	    response = requests.post('https://%s.battle.net/oauth/token' % region, data=data, auth=(client_id, client_secret))
+# # 	    return response.json()
 	
-# 	response = create_access_token(wowClientId, wowClientSecret)
-# 	access_token = response['access_token']
+# # 	response = create_access_token(wowClientId, wowClientSecret)
+# # 	access_token = response['access_token']
 
 
-@bot.command(pass_context=True, aliases=[])
+@bot.command(pass_context=True)
 async def zugzug(ctx):
 	await ctx.send('https://tenor.com/view/zug-zug-wo-w-world-of-warcraft-orc-dance-gif-12706638')
 

@@ -1,11 +1,9 @@
 import os
+from dotenv import load_dotenv
 import requests
 from discord.ext import commands
-from dotenv import load_dotenv
 
-BOT_PREFIX = '.'
-bot = commands.Bot(command_prefix = BOT_PREFIX)
-bot.remove_command('help')
+
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')

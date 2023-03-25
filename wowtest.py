@@ -1,13 +1,15 @@
 from settings import *
 
+
 from datetime import datetime
+
 
 
 # acosmicCharId = 201745243
 # slycatxCharId = 202594517
 
-charName = 'rushyret'
-charServer = 'thrall'
+charName = 'acosmic'
+charServer = 'illidan'
 wowApiChar = 'https://us.api.blizzard.com/profile/wow/character/'
 
 def create_access_token(client_id, client_secret, region = 'us'):
@@ -15,7 +17,7 @@ def create_access_token(client_id, client_secret, region = 'us'):
     response = requests.post('https://%s.battle.net/oauth/token' % region, data=data, auth=(client_id, client_secret))
     return response.json()
 
-response = create_access_token(wowClientId, wowClientSecret)
+response = create_access_token(wowClientId, WOW_CLIENT_SECRET)
 access_token = response['access_token']
 
 achStats = str(wowApiChar)+str(charServer).lower()+'/'+str(charName).lower()+'/achievements/statistics?namespace=profile-us&locale=en_US&access_token='+str(access_token)
