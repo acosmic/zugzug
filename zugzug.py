@@ -1,7 +1,6 @@
 #! /usr/bin/python3
 import discord
 from settings import *
-import psycopg2
 # from wow import *
 from datetime import datetime
 
