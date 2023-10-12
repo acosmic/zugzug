@@ -86,17 +86,13 @@ else:
 
 
 if __name__ == '__main__':
+    # print(xp3v3)
+
+    # print(xp2v2)
 
 
-    print(xp3v3)
-
-    print(xp2v2)
-
-
-
-
-
-    # print(aStats)
+    print(f"Category Names: {categoryNames}")
+    print(f"Subcategory Names: {subcategories}")
 
 
 

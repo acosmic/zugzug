@@ -8,7 +8,7 @@ from wowaccess import create_access_token
 # from wow import *
 
 BOT_PREFIX = '.'
-bot = commands.Bot(command_prefix = BOT_PREFIX)
+bot = commands.Bot(command_prefix = BOT_PREFIX, intents=discord.Intents.all())
 bot.remove_command('help')
 
 
@@ -81,16 +81,25 @@ async def pvp(ctx, character_name, character_server):
 	subcategories = categories[index_pvp]['sub_categories']
 	subcategory_names = [d['name'] for d in subcategories if 'name' in d]
 
+	# Highest ratings 
 	if 'Rated Arenas' in subcategory_names:
 		index_rated = subcategory_names.index('Rated Arenas')
 
 		rated_arena = subcategories[index_rated]['statistics']
 		rated_arena_names = [d['name'] for d in rated_arena if 'name' in d]
-		index_3v3 = rated_arena_names.index('Highest 3v3 personal rating')
-		index_2v2 = rated_arena_names.index('Highest 2v2 personal rating')
-
-		xp_3v3 = int(rated_arena[index_3v3]['quantity'])
-		xp_2v2 = int(rated_arena[index_2v2]['quantity'])
+		if 'Highest 3v3 personal rating' in rated_arena_names:
+			index_3v3 = rated_arena_names.index('Highest 3v3 personal rating')
+		else:
+			index_3v3 = ''
+		if 'Highest 2v2 personal rating' in rated_arena_names:
+			index_2v2 = rated_arena_names.index('Highest 2v2 personal rating')
+		else:
+			index_2v2 = ''
+		try:
+			xp_3v3 = int(rated_arena[index_3v3]['quantity'])
+			xp_2v2 = int(rated_arena[index_2v2]['quantity'])
+		except:
+			pass
 	else:
 		xp_3v3 = 'pve nerd'
 		xp_2v2 = 'pve nerd'
